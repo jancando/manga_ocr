@@ -184,7 +184,7 @@ def main():
                               "'classical': pure OpenCV heuristics, no extra download, but prone to "
                               "false positives on textured/full-color pages (works best on clean "
                               "black-and-white line art).")
-    parser.add_argument("--backend", default="easyocr", choices=["easyocr", "manga-ocr"],
+    parser.add_argument("--backend", default="easyocr", choices=["easyocr", "manga-ocr","paddle-ocr"],
                          help="OCR engine: 'easyocr' (multi-language, default) or "
                               "'manga-ocr' (Japanese only, higher accuracy on Japanese)")
     parser.add_argument("--langs", default="en",
@@ -214,6 +214,9 @@ def main():
         if args.backend == "manga-ocr":
             from ocr import MangaOCRBackend
             ocr_engine = MangaOCRBackend()
+        elif args.backend == "paddle-ocr":
+            from ocr import PaddleOCRBackend
+            ocr_engine = PaddleOCRBackend()
         else:
             from ocr import EasyOCRBackend
             lang_list = [l.strip() for l in args.langs.split(",") if l.strip()]

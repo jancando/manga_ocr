@@ -6,6 +6,18 @@ deep-translator>=1.11
 torch>=2.0
 transformers>=4.45
 
+
+# Optional: only needed if you use --backend paddle-ocr
+# paddleocr>=3.7.0
+
+# paddleOCR Engin default
+# transformers -> 20s/bubble
+
+# paddleOCR Engin 2
+# https://pytorch.org/get-started/locally/
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132
+# 3 transformers + GPU -> 0.2s/bubble
+
 # Optional: only needed if you use --backend manga-ocr (Japanese-only, higher
 # accuracy on Japanese manga specifically than the general easyocr backend)
 # manga-ocr>=0.1.11

@@ -43,6 +43,56 @@ def _masked_crop(image_bgr: np.ndarray, bubble: Bubble, padding: int = 6) -> np.
     return np.where(mask[..., None] == 255, crop, white_bg)
 
 
+class PaddleOCRBackend:
+    """
+    PP-OCRv6 text recognition models based on PPLCNetV4 + LightSVTR + CTC/NRTR multi-head decoder, 
+    single model supports 50 languages (tiny: 49). Medium achieves +5.1% over PP-OCRv5_server.
+    https://github.com/PaddlePaddle/PaddleOCR
+    """
+
+    def __init__(self):
+        try:
+            from paddleocr import PaddleOCR
+            import logging
+            logging.getLogger("paddlex").setLevel(logging.ERROR)
+        except ImportError as e:
+            raise ImportError("Run: pip install paddleocr") from e
+        
+        import torch
+
+        self._model = PaddleOCR(
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+            device="gpu:0" if torch.cuda.is_available() else "cpu",
+            engine="transformers",
+        )
+
+    def read_bubble(self, image_bgr: np.ndarray, bubble: Bubble, padding: int = 6) -> str:
+        masked = _masked_crop(image_bgr, bubble, padding)
+        results = self._model.predict(masked)
+        texts = []
+        for result in results:
+            data = result.json
+            if isinstance(data, str):
+                import json
+                data = json.loads(data)
+
+            # PaddleOCR 3.x wraps recognition output in "res".
+            res = data.get("res", data)
+            rec_texts = res.get("rec_texts", [])
+
+            if isinstance(rec_texts, str):
+                rec_texts = [rec_texts]
+
+            texts.extend(text for text in rec_texts if text.strip())
+
+        return " ".join(texts).strip()
+
+    def read_all(self, image_bgr: np.ndarray, bubbles: List[Bubble]) -> List[str]:
+        return [self.read_bubble(image_bgr, b) for b in bubbles]
+
+
 class EasyOCRBackend:
     """
     General-purpose multi-language OCR. Pass the language(s) you expect,

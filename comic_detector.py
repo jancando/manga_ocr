@@ -41,18 +41,18 @@ class Detection:
 
 
 class ComicDetector:
-    def __init__(self, device: str = "cpu", score_threshold: float = 0.3):
+    def __init__(self, score_threshold: float = 0.3):
         try:
             import torch
             from transformers import AutoImageProcessor, AutoModelForObjectDetection
         except ImportError as e:
             raise ImportError("Run: pip install transformers torch") from e
         self._torch = torch
-        self.device = device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.score_threshold = score_threshold
         # Downloads from Hugging Face on first run -- needs internet access once.
         self.processor = AutoImageProcessor.from_pretrained(MODEL_ID)
-        self.model = AutoModelForObjectDetection.from_pretrained(MODEL_ID).to(device).eval()
+        self.model = AutoModelForObjectDetection.from_pretrained(MODEL_ID).to(self.device).eval()
 
     def _detect_chunk(self, pil_chunk: Image.Image) -> List[Detection]:
         torch = self._torch
